@@ -76,7 +76,7 @@
 
 /* Set intensity to half PWM duty cycle */
 
-#define LED_INTENSITY		0x80
+#define LED_INTENSITY		0xE0
 
 typedef enum {
         LED_XOR,

@@ -41,44 +41,6 @@ void sysTickHandler(void * p_context){
 
 
 /**
- * @brief Determine if a button is being pressed.
- * @param waitForLongPress true if we want to wait to see if a button is long pressed
- * @return Button pressed, with long press mask if long pressed
- *
- */
-uint8_t getButton(bool waitForLongPress){
-
-	return 0;
-
-}
-
-/**
- * @brief wait for any button to be pressed
- * @param timeout milliseconds to busy wait for a button press, or 0 for forever
- * @return which button was pressed
- */
-uint8_t waitForButton(uint8_t timeout){
-
-    bool forever = false;
-    if(timeout == 0){
-        forever = true;
-    }
-
-    while(forever || timeout){
-        if(keyboardInterrupt()){
-            return 1;
-        }
-        nrf_delay_ms(1);
-        if(timeout > 0){
-            timeout--;
-        }
-    }
-
-	return 0;
-
-}
-
-/**
  * Get a list of files on a path
  * @param files
  * @param path

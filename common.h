@@ -72,8 +72,8 @@
 #define SWAP(c) (((c>>8)&0xFF)|(c&0xFF)<<8)
 
 // Includes for our app
-#include "utility.h"
 #include "main.h"
+#include "utility.h"
 #include "modules/ble.h"
 #include "modules/drv_ili9341.h"
 #include "modules/gfx.h"

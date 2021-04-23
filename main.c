@@ -24,21 +24,6 @@
 
 
 /**
- * Initialize the buttons
- */
-static void button_init(void){
-    // Setup the buttons
-    keyboardInit();
-}
-
-/**
- * Initialize the speaker
- */
-static void speaker_init(void){
-    // Setup the speaker
-}
-
-/**
  * Initialize the logging backend for logging over JTAG
  */
 static void log_init(void){
@@ -65,10 +50,9 @@ int main(void){
 
     // Setup the system
     log_init();
-    button_init();
-    speaker_init();
-    
-    
+
+    keyboard_init();
+
     // Timers
     app_timer_init();
     //usb_serial_init();
@@ -108,9 +92,6 @@ int main(void){
     printf("Booted!\n");
     // printf goes to the RTT_Terminal.log after you've fired up debug.sh
     
-
-    //util_gfx_draw_raw_file("/TEST/TIMEHACK.RAW", 0, 0, GFX_WIDTH, GFX_HEIGHT, NULL, false, NULL);
-    
     ledsOff();
 
     // Configure the systick
@@ -121,43 +102,106 @@ int main(void){
     advertising_setUser(ble_name);
     ble_adv_start();
 
+    char keymap[33];
+    memset(keymap, '^', 27);
+    keymap[27] = '\0';
+
+    util_gfx_fill_screen(COLOR_BLACK);
+
+    util_gfx_fill_rect(0, 0, 25, 25, COLOR_CYAN);
+    util_gfx_fill_rect(295, 0, 25, 25, COLOR_YELLOW);
+    util_gfx_fill_rect(0, 215, 25, 25, COLOR_PURPLE);
+    util_gfx_fill_rect(295, 215, 25, 25, COLOR_BLUE);
+
+    util_gfx_set_font(FONT_MONO55_8PT);
+    util_gfx_set_color(COLOR_WHITE);
+    util_gfx_set_cursor(65, 90);
+    util_gfx_print("DC801 BM Badge Fab Tester");
+    util_gfx_set_cursor(115, 110);
+    util_gfx_print("Toggle a key");
+    util_gfx_set_cursor(122, 140);
+    util_gfx_print("Key States");
+    util_gfx_set_cursor(55, 160);
+    util_gfx_print(keymap);
+
+    util_gfx_set_cursor(130, 210);
+    util_gfx_print("Rev 1.0");
+
+    int LEDCounter = 0;
+    int curLED = LED_XOR;
+    ledsOn();
+    ledOff(curLED);
+
+    bool sawKey = false;
+    int sawKeyCounter = 0;
+
+    uint32_t keyboardMask = 0;
+    uint32_t oldKeyboardMask = 0;
+
+
+
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wmissing-noreturn"
 
-    util_gfx_fill_screen(COLOR_BLACK);
-    util_gfx_set_font(FONT_COMPUTER_12PT);
-   util_gfx_set_cursor(22, 20);
-    util_gfx_set_color(COLOR_WHITE);
-    util_gfx_print("Press a key");
-
-int counter = 0;
-int curLED = LED_XOR;
-ledsOff();
-ledOn(curLED);
-
     while(true) {
 
-        if(waitForButton(10)){
-                util_gfx_fill_screen(COLOR_PURPLE);
-                util_gfx_set_cursor(22, 20);
-                util_gfx_print("Key Detected");
-                nrf_delay_ms(500);
-                util_gfx_fill_screen(COLOR_BLACK);
-                util_gfx_set_cursor(22, 20);
-                util_gfx_print("Press a key");
+        // Get the current keyboard mask
+        keyboardMask = get_keyboard_mask();
+
+        for(int i = 0; i < 27; i++){
+            if(((keyboardMask >> i) & 0x01) == 1){
+                keymap[i] = '_';
+            }
+            else{
+                keymap[i] = '^';
+            }
+            keymap[27] = '\0';
         }
 
-        nrf_delay_ms(5);
-        counter++;
-        if(counter > 25){
-                counter = 0;
-                ledOff(curLED);
+        // See if a key has changed state
+        if(oldKeyboardMask != keyboardMask){
+
+            if(!sawKey) {
+                util_gfx_fill_rect(100, 108, 150, 20, COLOR_BLACK);
+                util_gfx_set_cursor(102, 110);
+                util_gfx_set_color(COLOR_RED);
+                util_gfx_print("Key State Change!");
+                sawKey = true;
+            }
+            sawKeyCounter = 0;
+
+            util_gfx_set_color(COLOR_WHITE);
+            util_gfx_fill_rect(35, 158, 300, 20, COLOR_BLACK);
+            util_gfx_set_cursor(55, 160);
+            util_gfx_print(keymap);
+        }
+
+        // Save the old keymask for next loop
+        oldKeyboardMask = keyboardMask;
+
+        // Clear the 'key detected' if it was set and the timeout is reached
+        if(sawKey){
+            if(sawKeyCounter++ > 50){
+                //util_gfx_fill_screen(COLOR_BLACK);
+                util_gfx_fill_rect(100, 108, 150, 20, COLOR_BLACK);
+                util_gfx_set_cursor(115, 110);
+                util_gfx_set_color(COLOR_WHITE);
+                util_gfx_print("Toggle a key");
+                sawKey = false;
+            }
+        }
+
+        if(LEDCounter++ > 10){
+                LEDCounter = 0;
+                ledOn(curLED);
                 curLED++;
                 if(curLED == ISSI_LED_COUNT){
                         curLED = LED_XOR;
                 }
-                ledOn(curLED);
+                ledOff(curLED);
         }
+
+        nrf_delay_ms(5);
 
     }
 

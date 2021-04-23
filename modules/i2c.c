@@ -30,4 +30,7 @@ void i2cMasterTransmit(uint16_t addr, uint8_t const * pdata, size_t size){
 
 }
 
-
+void i2cMasterRead(uint16_t addr, uint8_t *pdata, size_t size)
+{
+    nrf_drv_twi_rx(&m_twi_master, addr, pdata, size);
+}
