@@ -125,7 +125,7 @@ int main(void){
     util_gfx_print(keymap);
 
     util_gfx_set_cursor(130, 210);
-    util_gfx_print("Rev 1.0");
+    util_gfx_print("Rev 1.1");
 
     int LEDCounter = 0;
     int curLED = LED_XOR;
@@ -144,6 +144,15 @@ int main(void){
 #pragma clang diagnostic ignored "-Wmissing-noreturn"
 
     while(true) {
+
+	// Check if the interrupt is set
+        if(is_keyboard_interrupt()){
+            util_gfx_fill_rect(140, 0, 25, 25, COLOR_RED);
+        }
+        else{
+            util_gfx_fill_rect(140, 0, 25, 25, COLOR_BLACK);
+        }
+
 
         // Get the current keyboard mask
         keyboardMask = get_keyboard_mask();
